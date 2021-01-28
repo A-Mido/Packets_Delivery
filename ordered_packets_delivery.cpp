@@ -13,7 +13,8 @@ int main(int argc, char* argv[])
     int winSizeBits; // window size
     int initSeq; // initial sequence
     int maxNumber; // maximum number permitted
-    int drop[100]; // array to drop failed elements
+    int dropLength = 100;
+    int drop[dropLength]; // array to drop failed elements
     int dropFlag = 0; // drop flag to follow elements
     int dropCounter = 0; // count dropped elements
 
@@ -97,12 +98,58 @@ int main(int argc, char* argv[])
             return 0;
     }
 
-    
+    PriorityQueue queue(maxNumber);
+    cout << "Recieved ";
+    maxNumber++;
+    for (int i = 4; i < argc; i++){
+        int packet = atoi(argv[i]);
+        if (packet == initSeq){
+            cout << packet << " ";
+            initSeq = (initSeq + 1) % maxNumber;
+            initSeq = queue.bufferSearch(initSeq);
+        }
+        else {
+            if (initSeq + winSizeBits < maxNumber){
+                if (packet < initSeq || (packet > initSeq + winSizeBits)){
+                    drop[dropCounter] = packet;
+                    dropCounter++;
+                }
+                else{
+                    dropFlag = queue.enqueue(packet);
+                    if (dropFlag){
+                        drop[dropCounter] = packet;
+                        dropCounter++;
+                    }
+                    initSeq = queue.bufferSearch(initSeq);
+                }
+            }
+            else if (initSeq + winSizeBits >= maxNumber){
+                if (packet < initSeq || (packet > initSeq + winSizeBits) % maxNumber){
+                    drop[dropCounter] = packet;
+                    dropCounter++;
+                }
+                else{
+                    dropFlag = queue.enqueue(packet);
+                    if (dropFlag){
+                        drop[dropCounter] = packet;
+                        dropCounter++;
+                    }
+                    initSeq = queue.bufferSearch(initSeq);
+                }
+            }
+        }
+    }
 
+    cout << "Expected " << initSeq << " Waiting ";
+    queue.printQueue(initSeq, winSizeBits);
+    cout << "Dropped ";
+    for (int i = 0; i < dropLength; i++){
+        if (drop[i] != -1)
+            cout << drop[i] << " ";
+    }
+    cout << endl;
 
-
-
-    
+    queue.freePriorityQueue();
 
     return 0;
 }
