@@ -67,7 +67,7 @@ class PriorityQueue{
     }
 
     void freePriorityQueue(){
-        free(nodes);
+        delete[] nodes;
     }
 
     
